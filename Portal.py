@@ -6,10 +6,12 @@ from streamlit_gsheets import GSheetsConnection
 
 
 
-conn = st.connection("gsheets", type=GSheetsConnection)
-keys = conn.read(worksheet='PARTNERS',  ttl='10m').dropna()
-sets = conn.read(worksheet='BEACH',     ttl='10m')
-occ  = conn.read(worksheet='OCCUPANCY', ttl='10m')
+read = st.connection("gsheets", type=GSheetsConnection)
+keys = read.read(spreadsheet=st.secrets['ppr'],worksheet='PARTNERS',  ttl='10m').dropna()
+sets = read.read(spreadsheet=st.secrets['ppr'],worksheet='BEACH',     ttl='10m')
+occ  = read.read(spreadsheet=st.secrets['ppr'],worksheet='OCCUPANCY', ttl='10m')
+
+write = st.connection("gsheets", type=GSheetsConnection)
 
 
 st.caption('VACAYZEN')
@@ -82,6 +84,7 @@ if st.session_state['button_login']:
                     st.dataframe(df,use_container_width=True,hide_index=True)
 
                     if st.button('Submit', use_container_width=True, type='primary'):
+                        write.create(worksheet='TEST',data=pd.DataFrame(list,columns=['Unit','Arrival','Departure']))
                         list = []
                         st.session_state['list'] = list
                         st.rerun()
