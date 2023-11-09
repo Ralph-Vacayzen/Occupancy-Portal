@@ -83,7 +83,10 @@ if st.session_state['button_login']:
                     st.dataframe(df,use_container_width=True,hide_index=True)
 
                     if st.button('Submit', use_container_width=True, type='primary'):
-                        print('submit')
+                        list = []
+                        st.session_state['list'] = list
+                        st.rerun()
+                        
                 
             
             with tab_upload:
