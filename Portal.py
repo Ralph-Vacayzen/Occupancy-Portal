@@ -40,41 +40,50 @@ if not st.session_state['button_login']:
 if st.session_state['button_login']:
     partner      = keys[keys.PASSKEY == st.session_state['key']]['PARTNER'].values[0]
     parnter_name = functions.remove_VRBO_from_partner_name(partner)
+    units        = sets[sets.PARTNER == partner]['UNIT CODE'].unique()
+
+    isAbleToSubmit   = False
+    if len(units) > 0: isAbleToSubmit = True
 
 
     st.subheader('Hello, ' + parnter_name + '!')
     st.write('What would you like to do?')
     tab_submit, tab_submitted = st.tabs(['Submit new occupancy','View submitted occupancy'])
 
-
     with tab_submit:
+        if not isAbleToSubmit:
+            target_email = functions.get_target_email_from_partner_situations(partner, sets)
 
-        tab_manual, tab_upload = st.tabs(['One-by-one','Upload in bulk'])
-
-        with tab_manual:
-            l, m, r = st.columns(3)
-            list = st.session_state['list']
-
-            unit      = l.selectbox('Unit',['Test'])
-            arrival   = m.date_input('Arrival')
-            departure = r.date_input('Departure')
-
-            l, r = st.columns(2)
-
-            if l.button('Add to List', use_container_width=True):
-                # df = conn.create(worksheet='TEST',data=occ)
-                list.append([unit, arrival, departure])
-            
-            if r.button('Remove last entry from list', use_container_width=True):
-                list = list[:-1]
-            
-            st.session_state['list'] = list
-            df = pd.DataFrame(st.session_state['list'], columns=['Unit','Arrival','Departure'])
-            st.dataframe(df,use_container_width=True,hide_index=True)
-            
+            st.warning('It appears that we do not have any active seasonal beach service units for you.')
+            'Please communicate any questions or concerns to: ' + target_email
         
-        with tab_upload:
-            'placeholder for upload'
+        else:
+
+            tab_manual, tab_upload = st.tabs(['One-by-one','Upload in bulk'])
+
+            with tab_manual:
+                l, m, r = st.columns(3)
+                list = st.session_state['list']
+
+                unit      = l.selectbox('Unit',units)
+                arrival   = m.date_input('Arrival')
+                departure = r.date_input('Departure')
+
+                l, r = st.columns(2)
+
+                if l.button('Add to List', use_container_width=True):
+                    list.append([unit, arrival, departure])
+                
+                if r.button('Remove last entry from list', use_container_width=True):
+                    list = list[:-1]
+                
+                st.session_state['list'] = list
+                df = pd.DataFrame(st.session_state['list'], columns=['Unit','Arrival','Departure'])
+                st.dataframe(df,use_container_width=True,hide_index=True)
+                
+            
+            with tab_upload:
+                'placeholder for upload'
 
     with tab_submitted:
 
@@ -85,8 +94,8 @@ if st.session_state['button_login']:
         if (len(df) == 0):
             target_email = functions.get_target_email_from_partner_situations(partner, sets)
 
-            'It appears that we do not have any occupancy data from you.'
-            'If you have submitted occupancy, and you do not see your submission here, it is still under review.'
+            st.warning('It appears that we do not have any occupancy data from you.')
+            st.success('If you have submitted occupancy, and you do not see your submission here, it is still under review.')
             'Please communicate any questions or concerns to: ' + target_email
 
         else:
