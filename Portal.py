@@ -71,7 +71,7 @@ if st.session_state['button_login']:
 
                 l, r = st.columns(2)
 
-                if l.button('Add to List', use_container_width=True):
+                if l.button('Add to list', use_container_width=True):
                     list.append([unit, arrival, departure])
                 
                 if r.button('Remove last entry from list', use_container_width=True):
@@ -81,6 +81,9 @@ if st.session_state['button_login']:
                 if (len(list) > 0):
                     df = pd.DataFrame(st.session_state['list'], columns=['Unit','Arrival','Departure'])
                     st.dataframe(df,use_container_width=True,hide_index=True)
+
+                    if st.button('Submit', use_container_width=True, type='primary'):
+                        print('submit')
                 
             
             with tab_upload:
