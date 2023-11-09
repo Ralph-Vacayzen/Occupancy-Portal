@@ -78,8 +78,9 @@ if st.session_state['button_login']:
                     list = list[:-1]
                 
                 st.session_state['list'] = list
-                df = pd.DataFrame(st.session_state['list'], columns=['Unit','Arrival','Departure'])
-                st.dataframe(df,use_container_width=True,hide_index=True)
+                if (len(list) > 0):
+                    df = pd.DataFrame(st.session_state['list'], columns=['Unit','Arrival','Departure'])
+                    st.dataframe(df,use_container_width=True,hide_index=True)
                 
             
             with tab_upload:
