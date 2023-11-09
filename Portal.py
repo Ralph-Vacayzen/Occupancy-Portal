@@ -59,9 +59,14 @@ if st.session_state['button_login']:
             arrival   = m.date_input('Arrival')
             departure = r.date_input('Departure')
 
-            if st.button('Add to List', use_container_width=True):
+            l, r = st.columns(2)
+
+            if l.button('Add to List', use_container_width=True):
                 # df = conn.create(worksheet='TEST',data=occ)
                 list.append([unit, arrival, departure])
+            
+            if r.button('Remove last entry from list', use_container_width=True):
+                list = list[:-1]
             
             st.session_state['list'] = list
             df = pd.DataFrame(st.session_state['list'], columns=['Unit','Arrival','Departure'])
