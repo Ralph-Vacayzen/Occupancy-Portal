@@ -15,8 +15,6 @@ occ  = conn.read(worksheet='OCCUPANCY', ttl='10m')
 st.caption('VACAYZEN')
 st.title('Occupancy Portal')
 
-st.info('Welcome! This is the place to submit new occupancy or view submitted occupancy to Vacayzen.')
-
 
 if 'key'           not in st.session_state: st.session_state['key']           = ''
 if 'list'          not in st.session_state: st.session_state['list']          = []
@@ -24,6 +22,7 @@ if 'button_login'  not in st.session_state: st.session_state['button_login']  = 
 if 'button_submit' not in st.session_state: st.session_state['button_submit'] = False
 
 if not st.session_state['button_login']:
+    st.info('Welcome! This is the place to submit new occupancy or view submitted occupancy to Vacayzen.')
     st.session_state['key'] = st.text_input('Please provide your partnernship passkey:')
 
     if st.button('Login', use_container_width=True):
@@ -39,7 +38,7 @@ if not st.session_state['button_login']:
 
 if st.session_state['button_login']:
     partner      = keys[keys.PASSKEY == st.session_state['key']]['PARTNER'].values[0]
-    parnter_name = functions.remove_VRBO_from_partner_name(partner)
+    parnter_name = functions.remove_VRBO_from_partner_name(partner).title()
     units        = sets[sets.PARTNER == partner]['UNIT CODE'].unique()
 
     isAbleToSubmit   = False
@@ -99,11 +98,11 @@ if st.session_state['button_login']:
         df.columns = ['Unit','Arrival','Departure']
 
         if (len(df) == 0):
-            target_email = functions.get_target_email_from_partner_situations(partner, sets)
-
             st.warning('It appears that we do not have any occupancy data from you.')
-            st.success('If you have submitted occupancy, and you do not see your submission here, it is still under review.')
-            'Please communicate any questions or concerns to: ' + target_email
 
         else:
             st.dataframe(df, hide_index=True, use_container_width=True)
+        
+        target_email = functions.get_target_email_from_partner_situations(partner, sets)
+        st.info('If you have submitted occupancy, and you do not see your submission here, it is still under review.')
+        'Please communicate any questions or concerns to: ' + target_email
