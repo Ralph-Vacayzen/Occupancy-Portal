@@ -40,7 +40,7 @@ if not st.session_state['button_login']:
 
 if st.session_state['button_login']:
     partner      = keys[keys.PASSKEY == st.session_state['key']]['PARTNER'].values[0]
-    parnter_name = functions.remove_VRBO_from_partner_name(partner).title()
+    parnter_name = functions.remove_VRBO_from_partner_name(partner)
     units        = sets[sets.PARTNER == partner]['UNIT CODE'].unique()
 
     isAbleToSubmit   = False
@@ -84,7 +84,16 @@ if st.session_state['button_login']:
                     st.dataframe(df,use_container_width=True,hide_index=True)
 
                     if st.button('Submit', use_container_width=True, type='primary'):
-                        write.create(worksheet='TEST',data=pd.DataFrame(list,columns=['Unit','Arrival','Departure']))
+                        df = pd.DataFrame(list,columns=['Unit','Arrival','Departure'])
+                        df['Partner']       = partner
+                        df['Type']          = 'Portal'
+                        df['Date Received'] = pd.to_datetime('now')
+                        df = df[['Partner','Unit','Arrival','Departure','Type','Date Received']]
+
+                        st.toast('Submitting...')
+
+                        tab = partner + ' | ' + str(pd.to_datetime('now'))[:19]
+                        write.create(worksheet=tab,data=df)
                         list = []
                         st.session_state['list'] = list
                         st.rerun()
