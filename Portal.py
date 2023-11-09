@@ -19,6 +19,7 @@ st.info('Welcome! This is the place to submit new occupancy or view submitted oc
 
 
 if 'key'           not in st.session_state: st.session_state['key']           = ''
+if 'list'          not in st.session_state: st.session_state['list']          = []
 if 'button_login'  not in st.session_state: st.session_state['button_login']  = False
 if 'button_submit' not in st.session_state: st.session_state['button_submit'] = False
 
@@ -51,14 +52,24 @@ if st.session_state['button_login']:
         tab_manual, tab_upload = st.tabs(['One-by-one','Upload in bulk'])
 
         with tab_manual:
-            'placeholder for manual'
+            l, m, r = st.columns(3)
+            list = st.session_state['list']
+
+            unit      = l.selectbox('Unit',['Test'])
+            arrival   = m.date_input('Arrival')
+            departure = r.date_input('Departure')
+
+            if st.button('Add to List', use_container_width=True):
+                # df = conn.create(worksheet='TEST',data=occ)
+                list.append([unit, arrival, departure])
+            
+            st.session_state['list'] = list
+            df = pd.DataFrame(st.session_state['list'], columns=['Unit','Arrival','Departure'])
+            st.dataframe(df,use_container_width=True,hide_index=True)
+            
         
         with tab_upload:
             'placeholder for upload'
-
-        if st.button('Submit', use_container_width=True):
-            # df = conn.create(worksheet='TEST',data=occ)
-            print('sending...')
 
     with tab_submitted:
 
