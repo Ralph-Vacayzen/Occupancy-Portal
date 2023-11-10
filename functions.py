@@ -12,3 +12,6 @@ def get_target_email_from_partner_situations(partner, sets):
         if 'CARILLON' in situation.upper(): return 'carillonbeach@vacayzen.com'
 
     return 'partners@vacayzen.com'
+
+def is_unit_valid(row, units):
+    return row.Unit in units

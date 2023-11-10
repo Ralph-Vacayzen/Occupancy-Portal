@@ -106,8 +106,8 @@ if st.session_state['button_login']:
                 temp = pd.DataFrame([], columns=['Unit','Arrival','Departure'])
                 temp.Unit = units
                 st.info('You must submit for active beach service program units.')
+                st.info('You must provide DD/MM/YY or DD/MM/YYYY format, for arrival and departure date fields.')
                 st.success('The below template includes each of your active beach service units pre-populated.')
-                st.warning('Submissions for non-active beach service program units will not be recorded.')
                 st.download_button(
                     'Download template',
                     temp.to_csv(index=False).encode(),
@@ -115,6 +115,34 @@ if st.session_state['button_login']:
                     use_container_width=True,
                     help='The template includes your unit IDs pre-populated.'
                     )
+                
+                file = st.file_uploader('Please provide your occupancy submission here:','CSV')
+                
+                if file is not None:
+                    df = pd.read_csv(file)
+                    
+                    '**Submission Validation Preview**'
+
+                    def is_unit_valid(row): return row.Unit in units
+                    def has_valid_dates(row): return isinstance(row.Arrival, pd.Timestamp) and isinstance(row.Departure, pd.Timestamp)
+                    
+                    df['Arrival'] = pd.to_datetime(df['Arrival']).dt.normalize()
+                    df['Departure'] = pd.to_datetime(df['Departure']).dt.normalize()
+                    df['Active Unit?'] = df.apply(is_unit_valid, axis=1)
+                    df['Valid Dates?'] = df.apply(has_valid_dates, axis=1)
+
+                    st.dataframe(df,use_container_width=True,hide_index=True)
+
+                    if False in df['Active Unit?'].values:
+                        st.warning('Submissions for non-active beach service program units will not be recorded.')
+                    if False in df['Valid Dates?'].values:
+                        st.warning('Submissions for non-valid arrival and departure dates will not be recorded.')
+
+                    df = df[df['Active Unit?']]
+                    df = df[df['Valid Dates?']]
+
+                    st.dataframe(df,use_container_width=True,hide_index=True)
+
                 
 
     with tab_submitted:
