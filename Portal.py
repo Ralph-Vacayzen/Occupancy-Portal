@@ -4,6 +4,8 @@ import functions
 
 from streamlit_gsheets import GSheetsConnection
 
+st.set_page_config(page_title='Occupancy Portal', page_icon='🗓️', layout="centered", initial_sidebar_state="auto", menu_items=None)
+
 
 
 read = st.connection("gsheets", type=GSheetsConnection)
@@ -101,7 +103,13 @@ if st.session_state['button_login']:
                 
             
             with tab_upload:
-                'placeholder for upload'
+                temp = pd.DataFrame([], columns=['Unit','Arrival','Departure'])
+                temp.Unit = units
+                st.info('Must submit for active beach service program units.')
+                st.success('The below template includes each of your active beach service units pre-populated.')
+                st.warning('Submissions for non-active beach service program units will not be recorded.')
+                st.download_button('Download template',temp.to_csv(index=False).encode(),'occupancy_template.csv',use_container_width=True,help='The template includes your unit IDs pre-populated.')
+                
 
     with tab_submitted:
 
