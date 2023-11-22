@@ -85,7 +85,7 @@ if st.session_state['button_login']:
                     df = pd.DataFrame(st.session_state['list'], columns=['Unit','Arrival','Departure'])
                     st.dataframe(df,use_container_width=True,hide_index=True)
 
-                    if st.button('Submit', use_container_width=True, type='primary'):
+                    if st.button('Submit', use_container_width=True, type='primary', key='submit_onebyone'):
                         df = pd.DataFrame(list,columns=['Unit','Arrival','Departure'])
                         df['Partner']       = partner
                         df['Type']          = 'Portal'
@@ -113,35 +113,73 @@ if st.session_state['button_login']:
                     temp.to_csv(index=False).encode(),
                     'occupancy_template.csv',
                     use_container_width=True,
-                    help='The template includes your unit IDs pre-populated.'
+                    help='The template includes your unit IDs pre-populated.',
+                    key='template'
                     )
                 
-                file = st.file_uploader('Please provide your occupancy submission here:','CSV')
-                
-                if file is not None:
-                    df = pd.read_csv(file)
+                with st.form(clear_on_submit=True, key='upload'):
+                    file = st.file_uploader('Please provide your occupancy submission here:','CSV')
                     
-                    '**Submission Validation Preview**'
+                    if file is not None:
+                        df = pd.read_csv(file)
 
-                    def is_unit_valid(row): return row.Unit in units
-                    def has_valid_dates(row): return isinstance(row.Arrival, pd.Timestamp) and isinstance(row.Departure, pd.Timestamp)
-                    
-                    df['Arrival'] = pd.to_datetime(df['Arrival']).dt.normalize()
-                    df['Departure'] = pd.to_datetime(df['Departure']).dt.normalize()
-                    df['Active Unit?'] = df.apply(is_unit_valid, axis=1)
-                    df['Valid Dates?'] = df.apply(has_valid_dates, axis=1)
+                        def is_unit_valid(row):   return row.Unit in units
+                        def has_valid_dates(row): return isinstance(row.Arrival, pd.Timestamp) and isinstance(row.Departure, pd.Timestamp)
+                        
+                        df['Arrival'] = pd.to_datetime(df['Arrival']).dt.normalize()
+                        df['Departure'] = pd.to_datetime(df['Departure']).dt.normalize()
+                        df['Active Unit?'] = df.apply(is_unit_valid, axis=1)
+                        df['Valid Dates?'] = df.apply(has_valid_dates, axis=1)
 
-                    st.dataframe(df,use_container_width=True,hide_index=True)
+                        with st.expander('**Submission Validation**'):
+                            errors = False
+                            st.dataframe(df,use_container_width=True,hide_index=True)
 
-                    if False in df['Active Unit?'].values:
-                        st.warning('Submissions for non-active beach service program units will not be recorded.')
-                    if False in df['Valid Dates?'].values:
-                        st.warning('Submissions for non-valid arrival and departure dates will not be recorded.')
+                            if False in df['Active Unit?'].values:
+                                errors = True
+                                st.warning('Submissions for non-active beach service program units will not be recorded.')
+                            if False in df['Valid Dates?'].values:
+                                errors = True
+                                st.warning('Submissions for non-valid arrival and departure dates will not be recorded.')
 
-                    df = df[df['Active Unit?']]
-                    df = df[df['Valid Dates?']]
+                            if errors:
+                                err = df
+                                err = err[(~err['Active Unit?'] | ~err['Valid Dates?'])]
+                                err = err[['Unit','Arrival','Departure']]
 
-                    st.dataframe(df,use_container_width=True,hide_index=True)
+
+                                st.download_button(
+                                    'Download rows that did not pass validation',
+                                    err.to_csv(index=False).encode(),
+                                    'occupancy_validation.csv',
+                                    use_container_width=True,
+                                    help='The download will only include rows that did not pass the validation checks.',
+                                    key='errors'
+                                    )
+
+                        df = df[df['Active Unit?']]
+                        df = df[df['Valid Dates?']]
+
+                        if not len(df) > 0:
+                            st.error('Your submitted file did not contain any valid rows to submit.')
+                            st.info('Please see the **Submission Validation** dropdown section above for more detail.')
+                        else:
+                            '**Submission Preview**'
+                            df = df[['Unit','Arrival','Departure']]
+                            st.dataframe(df,use_container_width=True,hide_index=True)
+
+                            submitted = st.form_submit_button('Submit', use_container_width=True, type='primary', key='submit_upload')
+
+                            if submitted:
+                                df['Partner']       = partner
+                                df['Type']          = 'Portal'
+                                df['Date Received'] = pd.to_datetime('now')
+                                df                  = df[['Partner','Unit','Arrival','Departure','Type','Date Received']]
+
+                                st.toast('Submitting...')
+
+                                tab = partner + ' | ' + str(pd.to_datetime('now'))[:19]
+                                write.create(worksheet=tab,data=df)
 
                 
 
